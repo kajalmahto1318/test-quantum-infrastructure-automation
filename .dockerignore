@@ -1,0 +1,107 @@
+# =============================================================================
+# .dockerignore - Optimize Docker Build Context
+# =============================================================================
+# This file tells Docker which files/directories to exclude from the build context.
+# Reduces build time and image size.
+# =============================================================================
+
+# Environment files (never include in image)
+.env
+.env.*
+*.env
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README*.md
+docs/
+*.md
+!docker-entrypoint.sh
+
+# Terraform state (should be remote)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+*.tfvars
+*.tfvars.json
+
+# Terraform directories that will be initialized in container
+providers/**/.terraform/
+providers/**/*.tfstate
+providers/**/*.tfstate.*
+
+# Go build artifacts (we build in container)
+cli/deployer
+cli/dist/
+cli/build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+env/
+
+# Node
+node_modules/
+npm-debug.log
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+# Secrets and credentials (NEVER include)
+*.pem
+*.key
+*.crt
+secrets/
+credentials/
+
+# Docker files (not needed in build context)
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Testing
+test/
+tests/
+*.test
+
+# Keep these files (override global patterns)
+!cli/go.mod
+!cli/go.sum
+!cli/main.go
+!docker-entrypoint.sh
+!Dockerfile
