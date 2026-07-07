@@ -1,0 +1,202 @@
+{
+  "provider": "aws",
+  "project_name": "quantum",
+  "master": {
+    "region": "us-east-1",
+    "s3_bucket": "quantum-datalytics-tfstate",
+    "dynamodb_table": "quantum-datalytics-tfstate-lock",
+    "use_remote_state": false
+  },
+  "networking": {
+    "vpc_cidr": "10.0.0.0/16",
+    "az_count": 2,
+    "public_subnet_cidrs": ["10.0.1.0/24", "10.0.2.0/24"],
+    "private_subnet_cidrs": ["10.0.101.0/24", "10.0.102.0/24"],
+    "nat_gateway": true,
+    "internet_gateway": true
+  },
+  "eks": {
+    "enabled": true,
+    "cluster_version": "1.32",
+    "endpoint_public_access": true,
+    "endpoint_private_access": true,
+    "public_access_cidrs": ["0.0.0.0/0"],
+    "enable_vpc_cni_addon": true,
+    "enable_coredns_addon": true,
+    "enable_kube_proxy_addon": true,
+    "enable_ebs_csi_addon": true,
+    "store_kubeconfig_in_secrets_manager": true
+  },
+  "nodegroup": {
+    "instance_types": ["t3.medium", "t3.large"],
+    "capacity_type": "ON_DEMAND",
+    "disk_size": 30,
+    "desired_size": 1,
+    "min_size": 1,
+    "max_size": 5,
+    "node_labels": {
+      "workload-type": "general"
+    },
+    "node_taints": []
+  },
+  "karpenter": {
+    "enabled": true,
+    "namespace": "karpenter",
+    "version": "0.37.0",
+    "deploy": true,
+    "controller_replicas": 2,
+    "controller_cpu_request": "100m",
+    "controller_memory_request": "256Mi",
+    "controller_cpu_limit": "1",
+    "controller_memory_limit": "1Gi",
+    "create_default_nodepool": true,
+    "ami_family": "AL2",
+    "node_volume_size": 30,
+    "node_volume_type": "gp3",
+    "architectures": ["amd64"],
+    "capacity_types": ["spot", "on-demand"],
+    "instance_categories": ["c", "m", "r", "t"],
+    "instance_cpu_values": ["2", "4", "8", "16", "32"],
+    "min_instance_memory": "2048",
+    "nodepool_labels": {
+      "managed-by": "karpenter"
+    },
+    "nodepool_taints": [],
+    "max_pods_per_node": 110,
+    "nodepool_cpu_limit": "1000",
+    "nodepool_memory_limit": "1000Gi",
+    "consolidation_policy": "WhenUnderutilized",
+    "consolidate_after": "30s",
+    "disruption_budget_nodes": "10%",
+    "nodepool_weight": 10
+  },
+  "storage": {
+    "enabled": true,
+    "encrypted": true,
+    "performance_mode": "generalPurpose",
+    "throughput_mode": "bursting",
+    "enable_backup": true,
+    "create_access_point": true,
+    "deploy_csi_driver": true,
+    "create_storage_class": true
+  },
+  "argo": {
+    "enabled": true,
+    "deploy_workflows": true,
+    "namespace": "argo",
+    "version": "0.41.0",
+    "enable_server": true,
+    "server_service_type": "LoadBalancer",
+    "server_replicas": 1,
+    "controller_replicas": 1,
+    "enable_s3_artifacts": true,
+    "artifact_retention_days": 30,
+    "enable_metrics": true,
+    "enable_workflow_archive": false,
+    "create_admin_service_account": true,
+    "store_token_in_secrets_manager": true
+  },
+  "secrets": {
+    "enabled": false,
+    "deploy_external_secrets": false,
+    "namespace": "external-secrets",
+    "version": "0.9.13",
+    "create_secret_store": false,
+    "enable_ssm": false,
+    "deploy_csi_driver": false,
+    "enable_rotation": false,
+    "secrets_map": {},
+    "ssm_parameters": {}
+  },
+  "post_cluster": {
+    "enabled": true,
+    "verify_cluster_readiness": true,
+    "cluster_readiness_wait_time": "30s",
+    "wait_for_karpenter": true,
+    "namespaces": {
+      "deploy": true,
+      "list": ["dev", "staging", "production"],
+      "labels": {},
+      "annotations": {}
+    },
+    "rbac": {
+      "create_admin_role": true,
+      "create_developer_role": true,
+      "create_readonly_role": true
+    },
+    "ingress": {
+      "deploy": true,
+      "type": "alb",
+      "namespace": "ingress-nginx",
+      "version": "4.10.0",
+      "replicas": 1,
+      "service_type": "LoadBalancer",
+      "load_balancer_scheme": "internet-facing",
+      "cpu_request": "100m",
+      "memory_request": "256Mi",
+      "cpu_limit": "500m",
+      "memory_limit": "512Mi",
+      "enable_metrics": true,
+      "enable_default_backend": true,
+      "config": {
+        "proxy-body-size": "50m",
+        "proxy-read-timeout": "300",
+        "proxy-send-timeout": "300",
+        "use-forwarded-headers": "true"
+      }
+    },
+    "resource_quotas": {
+      "deploy": false,
+      "quotas": {}
+    },
+    "limit_ranges": {
+      "deploy": false,
+      "ranges": {}
+    },
+    "network_policies": {
+      "deploy": false
+    },
+    "pod_security": {
+      "enforce": false,
+      "level": "baseline"
+    },
+    "karpenter_manifests": {
+      "create_karpenter_manifests": true,
+      "karpenter_nodeclass_name": "default",
+      "karpenter_nodepool_name": "default",
+      "karpenter_ami_family": "AL2",
+      "karpenter_node_tags": {
+        "managed-by": "karpenter"
+      },
+      "karpenter_node_labels": {
+        "managed-by": "karpenter"
+      },
+      "karpenter_node_taints": [],
+      "karpenter_requirements": [
+        {
+          "key": "kubernetes.io/arch",
+          "operator": "In",
+          "values": ["amd64"]
+        },
+        {
+          "key": "karpenter.sh/capacity-type",
+          "operator": "In",
+          "values": ["on-demand"]
+        },
+        {
+          "key": "node.kubernetes.io/instance-type",
+          "operator": "In",
+          "values": ["t3.medium", "t3.large", "m5.large", "m5.xlarge"]
+        }
+      ],
+      "karpenter_limits": {
+        "cpu": "1000",
+        "memory": "1000Gi"
+      },
+      "karpenter_consolidation_policy": "WhenUnderutilized",
+      "karpenter_consolidate_after": "30s",
+      "karpenter_expire_after": "720h",
+      "karpenter_disruption_budget_nodes": "10%"
+    }
+  }
+}
